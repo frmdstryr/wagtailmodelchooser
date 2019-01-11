@@ -12,24 +12,30 @@
 				{% endif %}
 			</div>
 		{% else %}
+            {% block result_list %}
 			<table class="listing">
 				<thead>
+                    {% block result_header %}
 					<tr class="table-headers">
 						<th>Title</th>
 					</tr>
+					{% endblock %}
 				</thead>
 				<tbody>
 					{% for instance in object_list %}
+                        {% block result_row %}
 						<tr>
 							<td class="title">
 								<h2><a class="model-choice" data-pk="{{ instance.pk }}" href="#">
-									{{ instance }}
+									{% block result_item %}{{ instance }}{% endblock %}
 								</a></h2>
 							</td>
 						</tr>
+						{% endblock %}
 					{% endfor %}
 				</tbody>
 			</table>
+			{% endblock %}
 		{% endif %}
 	</div>
 

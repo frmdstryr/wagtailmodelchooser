@@ -8,6 +8,8 @@ from wagtail.admin.widgets import AdminChooser
 
 class AdminModelChooser(AdminChooser):
     show_edit_link = False
+    signed_data = None
+    chooser_template = "wagtailmodelchooser/model_chooser.html"
 
     def __init__(self, model, filter_name=None, **kwargs):
         self.target_model = model
@@ -15,7 +17,6 @@ class AdminModelChooser(AdminChooser):
         self.choose_one_text = _('Choose %s') % name
         self.choose_another_text = _('Choose another %s') % name
         self.link_to_chosen_text = _('Edit this %s') % name
-
         self.filter_name = filter_name
 
         super(AdminModelChooser, self).__init__(**kwargs)
@@ -26,7 +27,7 @@ class AdminModelChooser(AdminChooser):
         original_field_html = super(AdminModelChooser, self).render_html(
             name, value, attrs)
 
-        return render_to_string("wagtailmodelchooser/model_chooser.html", {
+        return render_to_string(self.chooser_template, {
             'widget': self,
             'model_opts': self.target_model._meta,
             'original_field_html': original_field_html,
@@ -40,6 +41,8 @@ class AdminModelChooser(AdminChooser):
         kwargs = {'app_label': opts.app_label, 'model_name': opts.model_name}
         if self.filter_name:
             kwargs['filter_name'] = self.filter_name
+        if self.signed_data:
+            kwargs = {'signed_data': self.signed_data}
 
         return "createModelChooser({id}, {url});".format(
             id=json.dumps(id_),

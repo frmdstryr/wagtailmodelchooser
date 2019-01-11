@@ -11,6 +11,7 @@ __all__ = [
 class Registry(object):
     def __init__(self):
         self.choosers = {}
+        self.panels = {}
         self.filters = {}
 
     def register_chooser(self, chooser, **kwargs):
@@ -44,6 +45,8 @@ class Registry(object):
 class Chooser(object):
     model = None
     icon = 'placeholder'
+    modal_template = 'wagtailmodelchooser/modal.html'
+    results_template = 'wagtailmodelchooser/results.html'
 
     def get_queryset(self, request):
         return self.model._default_manager.all()
