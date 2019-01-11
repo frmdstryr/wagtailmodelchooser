@@ -82,5 +82,5 @@ def chooser(request, app_label, model_name, filter_name=None):
         return render_modal_workflow(
             request,
             'wagtailmodelchooser/modal.html',
-            'wagtailmodelchooser/modal.js',
+            None,
             context)
