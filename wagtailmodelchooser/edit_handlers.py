@@ -1,4 +1,5 @@
 from django.core import signing
+from django.shortcuts import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
@@ -17,6 +18,8 @@ class ModelChooserPanel(BaseChooserPanel, Chooser):
     auto_register = False
     show_add_link = False
     show_edit_link = False
+    link_to_add_url = None
+    link_to_edit_url = None
 
     # Change the modal chooser template
     chooser_template = None
@@ -24,11 +27,38 @@ class ModelChooserPanel(BaseChooserPanel, Chooser):
     # Key used to store this chooser in the registry
     chooser_id = None
 
-    def __init__(self, field_name, filter_name=None, **kwargs):
+    def __init__(self, field_name, filter_name=None, auto_register=None,
+                 show_add_link=None, show_edit_link=None,
+                 link_to_add_url=None, link_to_edit_url=None, **kwargs):
         super().__init__(field_name, **kwargs)
         self.filter_name = filter_name
         if filter_name is not None:
             FILTERS[filter_name] = filter
+        if auto_register is not None:
+            self.auto_register = auto_register
+        if show_add_link is not None:
+            self.show_add_link = show_add_link
+        if show_edit_link is not None:
+            self.show_edit_link = show_edit_link
+        if link_to_add_url is not None:
+            self.link_to_add_url = link_to_add_url
+        if link_to_edit_url is not None:
+            self.link_to_edit_url = link_to_edit_url
+
+    def clone(self):
+        return self.__class__(
+            field_name=self.field_name,
+            filter_name=self.field_name,
+            widget=self.widget if hasattr(self, 'widget') else None,
+            heading=self.heading,
+            classname=self.classname,
+            help_text=self.help_text,
+            auto_register=self.auto_register,
+            show_add_link=self.show_add_link,
+            show_edit_link=self.show_edit_link,
+            link_to_add_url=self.link_to_add_url,
+            link_to_edit_url=self.link_to_edit_url,
+        )
 
     def on_instance_bound(self):
         """ Use the registry as a temporary cache to hold the chooser
@@ -59,6 +89,9 @@ class ModelChooserPanel(BaseChooserPanel, Chooser):
     def widget_overrides(self):
         return {self.field_name: AdminModelChooser(
             model=self.target_model, filter_name=self.filter_name,
+            link_to_add_url=self.get_link_to_add_url(),
+            link_to_edit_url=self.get_link_to_edit_url(),
+            show_add_link=self.show_add_link,
             show_edit_link=self.show_edit_link)}
 
     @property
@@ -104,12 +137,30 @@ class ModelChooserPanel(BaseChooserPanel, Chooser):
         return self.target_model._default_manager.all()
 
     def get_instance(self, request, panel_data):
-        """ Get the original instance for the chooser.
+        """ Get the original instance for the chooser or create an empty
+        model if no pk is given.
 
         """
-        return self.model._default_manager.get(pk=panel_data['instance_pk'])
+        pk = panel_data['instance_pk']
+        if pk is not None:
+            return self.model._default_manager.get(pk=pk)
+        return self.model()
 
     def get_form_class(self):
         return get_form_for_model(self.model,
                                   fields=self.required_fields(),
                                   widgets=self.widget_overrides())
+
+    def get_link_to_add_url(self):
+        if self.link_to_add_url:
+            return self.link_to_add_url
+        opts = self.target_model._meta
+        url_name = '{opts.app_label}_{opts.model_name}_modeladmin_create'
+        return url_name.format(opts=opts)
+
+    def get_link_to_edit_url(self):
+        if self.link_to_edit_url:
+            return self.link_to_edit_url
+        opts = self.target_model._meta
+        url_name = '{opts.app_label}_{opts.model_name}_modeladmin_edit'
+        return url_name.format(opts=opts)

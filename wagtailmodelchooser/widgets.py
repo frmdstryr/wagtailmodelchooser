@@ -7,7 +7,6 @@ from wagtail.admin.widgets import AdminChooser
 
 
 class AdminModelChooser(AdminChooser):
-    show_edit_link = False
     signed_data = None
     chooser_template = "wagtailmodelchooser/model_chooser.html"
 
@@ -15,15 +14,21 @@ class AdminModelChooser(AdminChooser):
         self.target_model = model
         name = self.target_model._meta.verbose_name
         self.choose_one_text = _('Choose %s') % name
-        self.choose_another_text = _('Choose another %s') % name
-        self.link_to_chosen_text = _('Edit this %s') % name
+        self.choose_another_text = _('Choose another')
         self.filter_name = filter_name
+        self.link_to_chosen_text = kwargs.pop('link_to_chosen_text', _('Edit'))
+        self.link_to_add_text = kwargs.pop('link_to_add_text ', _('Add'))
+        self.link_to_edit_url = kwargs.pop('link_to_edit_url', '#')
+        self.link_to_add_url = kwargs.pop('link_to_add_url', '#')
+        self.show_edit_link = kwargs.get(
+            'show_edit_link', False) and (self.link_to_edit_url != '#')
+        self.show_add_link = kwargs.pop(
+            'show_add_link', False) and (self.link_to_add_url != '#')
 
         super(AdminModelChooser, self).__init__(**kwargs)
 
     def render_html(self, name, value, attrs):
         instance, value = self.get_instance_and_id(self.target_model, value)
-
         original_field_html = super(AdminModelChooser, self).render_html(
             name, value, attrs)
 

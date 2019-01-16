@@ -1,9 +1,42 @@
-{% extends "wagtailadmin/widgets/chooser.html" %}
+{% comment %}
+    Either the chosen or unchosen div will be shown, depending on the presence
+    of the 'blank' class on the container.
 
-{% block chooser_class %}model-chooser{% endblock %}
+    Any element with the 'action-choose' class will open the page chooser modal
+    when clicked.
+{% endcomment %}
 
-{% block chosen_state_view %}
-    <span class="title">{{ item }}</span>
-{% endblock %}
+<div id="{{ attrs.id }}-chooser" class="chooser {% block chooser_class %}model-chooser{% endblock %} {% if not value %}blank{% endif %}">
 
-{% block edit_chosen_item_url %}{% if item %}{% url 'wagtailsnippets:edit' model_opts.app_label model_opts.model_name item.id %}{% endif %}{% endblock %}
+    <div class="chosen">
+        {% block chosen_state_view %}<span class="title">{{ item }}</span>{% endblock %}
+
+        {% block choosen_actions %}
+        <ul class="actions">
+            {% if not widget.is_required %}
+                <li><button type="button" class="button action-clear button-small button-secondary">{{ widget.clear_choice_text }}</button></li>
+            {% endif %}
+            <li><button type="button" class="button action-choose button-small button-secondary">{{ widget.choose_another_text }}</button></li>
+            {% if widget.show_add_link %}
+                <li><a href="{% block add_chosen_item_url %}{% url widget.link_to_add_url %}{% endblock %}" class="add-link button button-small button-secondary" title="{{ widget.link_to_add_text }}" target="_blank" rel="noopener noreferrer">{{ widget.link_to_add_text }}</a></li>
+            {% endif %}
+            {% if widget.show_edit_link %}
+                {% if value %}
+                    <li><a href="{% block edit_chosen_item_url %}{% url widget.link_to_edit_url value %}{% endblock %}" class="edit-link button button-small button-secondary" target="_blank" rel="noopener noreferrer">{{ widget.link_to_chosen_text }}</a></li>
+                {% endif %}
+            {% endif %}
+        </ul>
+        {% endblock %}
+    </div>
+
+    {% block unchosen_actions %}
+    <div class="unchosen">
+        <button type="button" class="button action-choose button-small button-secondary">{{ widget.choose_one_text }}</button>
+        {% if widget.show_add_link %}
+            <a href="{% block add_unchosen_item_url %}{% url widget.link_to_add_url %}{% endblock %}" class="add-link button button-small button-secondary" title="{{ widget.link_to_add_text }}" target="_blank" rel="noopener noreferrer">{{ widget.link_to_add_text }}</a>
+        {% endif %}
+    </div>
+    {% endblock %}
+</div>
+
+{{ original_field_html }}
